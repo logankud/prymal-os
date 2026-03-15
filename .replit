@@ -4,6 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
+packages = ["python312Packages.pytest_7", "sqlite"]
 
 [workflows]
 runButton = "Project"
@@ -28,6 +29,24 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow]]
+name = "Tests"
+mode = "sequential"
+author = 17731565
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pytest -v --disable-warnings"
+
+[[workflows.workflow]]
+name = "API Server"
+mode = "sequential"
+author = 17731565
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "uvicorn app:app --reload"
 
 [[ports]]
 localPort = 5000
