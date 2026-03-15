@@ -4,7 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
-packages = ["python312Packages.pytest_7", "sqlite"]
+packages = ["libxcrypt", "python312Packages.pytest_7", "sqlite"]
 
 [workflows]
 runButton = "Project"
@@ -17,6 +17,10 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Start application"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "API Server"
 
 [[workflows.workflow]]
 name = "Start application"
@@ -37,20 +41,40 @@ author = 17731565
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "pytest -v --disable-warnings"
+args = "uv sync"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "uv run pytest -v --disable-warnings"
 
 [[workflows.workflow]]
 name = "API Server"
+mode = "sequential"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "uv run uvicorn app:app --host 0.0.0.0 --port 8000 --reload"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "DevServer"
 mode = "sequential"
 author = 17731565
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "uvicorn app:app --reload"
+args = "uv run uvicorn app:app --host 0.0.0.0 --port 5000 --reload"
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
 
 [deployment]
 deploymentTarget = "autoscale"

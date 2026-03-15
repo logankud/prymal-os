@@ -9,6 +9,9 @@ INSERT INTO tasks (
     priority,
     status,
     expected_outputs,
+    expected_token_count,
+    due_date,
+    dependency_str,
     parent_task_id,
     dependencies,
     created_at,
@@ -16,4 +19,4 @@ INSERT INTO tasks (
     artifacts,
     thread_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

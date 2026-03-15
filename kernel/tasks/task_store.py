@@ -3,7 +3,8 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
-from kernel.tasks.task import Task, Objective, TaskDomain, TaskPriority, TaskStatus
+from kernel.storage.sqllite import SQLiteStorage
+from kernel.tasks.task import Objective, Task, TaskDomain, TaskPriority, TaskStatus
 from kernel.utils.sql_loader import load_sql
 
 
@@ -34,6 +35,9 @@ class TaskStore:
             task.priority.value,
             task.status.value,
             json.dumps(task.expected_outputs),
+            task.expected_token_count,
+            task.due_date.isoformat() if task.due_date else None,
+            task.dependency_str,
             task.parent_task_id,
             json.dumps(task.dependencies),
             task.created_at.isoformat(),
@@ -60,6 +64,9 @@ class TaskStore:
             task.priority.value,
             task.status.value,
             json.dumps(task.expected_outputs),
+            task.expected_token_count,
+            task.due_date.isoformat() if task.due_date else None,
+            task.dependency_str,
             task.parent_task_id,
             json.dumps(task.dependencies),
             task.created_at.isoformat(),
@@ -80,22 +87,22 @@ class TaskStore:
 
     def _row_to_task(self, row: dict) -> Task:
         return Task(
+            task_id=row["task_id"],
             objective=Objective(
                 action=row["action"],
                 subject=row["subject"],
                 outcome=row["outcome"],
             ),
             domain=TaskDomain(row["domain"]),
-            created_by=row["created_by"],
-            owner_worker=row["owner_worker"],
-            priority=TaskPriority(row["priority"]),
             status=TaskStatus(row["status"]),
-            expected_outputs=json.loads(row["expected_outputs"]),
-            parent_task_id=row["parent_task_id"],
-            dependencies=json.loads(row["dependencies"]),
-            task_id=row["task_id"],
+            priority=TaskPriority(row["priority"]),
+            owner_worker=row["owner_worker"],
+            created_by=row["created_by"],
             created_at=datetime.fromisoformat(row["created_at"]),
             updated_at=datetime.fromisoformat(row["updated_at"]),
+            expected_outputs=json.loads(row["expected_outputs"]),
+            dependencies=json.loads(row["dependencies"]),
+            parent_task_id=row["parent_task_id"],
             artifacts=json.loads(row["artifacts"]),
             thread_id=row["thread_id"],
         )

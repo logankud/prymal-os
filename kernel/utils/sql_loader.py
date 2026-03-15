@@ -1,7 +1,7 @@
 from pathlib import Path
 
-# SQL files live at the repo root: /sql/**
-SQL_BASE_PATH = Path(__file__).resolve().parents[2] / "sql"
+# SQL files live under the kernel package: kernel/sql/**
+SQL_BASE_PATH = Path(__file__).resolve().parents[1] / "sql"
 
 
 def load_sql(relative_path: str) -> str:

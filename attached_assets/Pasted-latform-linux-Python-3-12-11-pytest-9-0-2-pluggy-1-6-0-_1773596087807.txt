@@ -1,0 +1,122 @@
+latform linux -- Python 3.12.11, pytest-9.0.2, pluggy-1.6.0 -- /home/runner/workspace/.pythonlibs/bin/python
+cachedir: .pytest_cache
+rootdir: /home/runner/workspace
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.12.1
+collected 11 items                                                                                                                                                            
+
+tests/smoke/test_api_smoke.py::test_api_health PASSED                                                                                                                   [  9%]
+tests/smoke/test_api_smoke.py::test_api_task_lifecycle_sample_and_custom FAILED                                                                                         [ 18%]
+tests/smoke/test_kernel_smoke.py::test_task_creation_and_persistence FAILED                                                                                             [ 27%]
+tests/smoke/test_kernel_smoke.py::test_task_routing_returns_expected_worker PASSED                                                                                      [ 36%]
+tests/smoke/test_kernel_smoke.py::test_router_domain_mapping[operations-coo_worker] PASSED                                                                              [ 45%]
+tests/smoke/test_kernel_smoke.py::test_router_domain_mapping[marketing-cmo_worker] PASSED                                                                               [ 54%]
+tests/smoke/test_kernel_smoke.py::test_router_domain_mapping[research-research_worker] PASSED                                                                           [ 63%]
+tests/smoke/test_kernel_smoke.py::test_router_domain_mapping[general-general_worker] PASSED                                                                             [ 72%]
+tests/smoke/test_kernel_smoke.py::test_dispatch_created_tasks_queues_and_assigns_worker FAILED                                                                          [ 81%]
+tests/smoke/test_kernel_smoke.py::test_dispatch_only_targets_created_tasks FAILED                                                                                       [ 90%]
+tests/smoke/test_kernel_smoke.py::test_router_uses_registry_resolution PASSED                                                                                           [100%]
+
+================================================================================== FAILURES ===================================================================================
+__________________________________________________________________ test_api_task_lifecycle_sample_and_custom __________________________________________________________________
+
+session = <requests.sessions.Session object at 0x7f96a7f01250>
+
+    def test_api_task_lifecycle_sample_and_custom(session: requests.Session) -> None:
+    
+        # ----------- Fetch sample task by id
+>       response = request_or_die(session, "GET", f"/tasks/{sample_task_id}")
+                                                            ^^^^^^^^^^^^^^
+E       NameError: name 'sample_task_id' is not defined
+
+tests/smoke/test_api_smoke.py:55: NameError
+_____________________________________________________________________ test_task_creation_and_persistence ______________________________________________________________________
+
+task_store = <kernel.tasks.task_store.TaskStore object at 0x7f96a7f4acf0>
+sample_task = Task(objective=Objective(action='investigate', subject='Shopify revenue drop', outcome='identify likely causes'), doma..., 15, 17, 33, 32, 707304), updated_at=datetime.datetime(2026, 3, 15, 17, 33, 32, 707313), artifacts=[], thread_id=None)
+
+    def test_task_creation_and_persistence(task_store: TaskStore, sample_task) -> None:
+        """A task can be created via input adapter and persisted to the task store."""
+>       task_store.create_task(sample_task)
+
+tests/smoke/test_kernel_smoke.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+kernel/tasks/task_store.py:46: in create_task
+    self.storage.execute(INSERT_TASK, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <kernel.storage.sqllite.SQLiteStorage object at 0x7f96a7f4aed0>
+query = 'INSERT INTO tasks (\n    task_id,\n    action,\n    subject,\n    outcome,\n    domain,\n    created_by,\n    owner_w...    updated_at,\n    artifacts,\n    thread_id\n)\nVALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);\n'
+params = ('1383565e-b406-4a1a-8521-c04312ff738c', '{"action": "investigate", "subject": "Shopify revenue drop", "outcome": "identify likely causes"}', 'operations', 'created', 2, None, ...)
+
+    def execute(self, query: str, params: tuple = ()) -> None:
+        with self.lock:
+            with self.conn:
+>               self.conn.execute(query, params)
+E               sqlite3.ProgrammingError: Incorrect number of bindings supplied. The current statement uses 19, and there are 17 supplied.
+
+kernel/storage/sqllite.py:21: ProgrammingError
+____________________________________________________________ test_dispatch_created_tasks_queues_and_assigns_worker ____________________________________________________________
+
+task_store = <kernel.tasks.task_store.TaskStore object at 0x7f96a7728530>
+sample_task = Task(objective=Objective(action='investigate', subject='Shopify revenue drop', outcome='identify likely causes'), doma..., 15, 17, 33, 32, 727585), updated_at=datetime.datetime(2026, 3, 15, 17, 33, 32, 727592), artifacts=[], thread_id=None)
+
+    def test_dispatch_created_tasks_queues_and_assigns_worker(
+        task_store: TaskStore,
+        sample_task,
+    ) -> None:
+        """Dispatcher finds CREATED tasks, assigns a worker, and moves them to QUEUED."""
+>       task_store.create_task(sample_task)
+
+tests/smoke/test_kernel_smoke.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+kernel/tasks/task_store.py:46: in create_task
+    self.storage.execute(INSERT_TASK, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <kernel.storage.sqllite.SQLiteStorage object at 0x7f96a7728350>
+query = 'INSERT INTO tasks (\n    task_id,\n    action,\n    subject,\n    outcome,\n    domain,\n    created_by,\n    owner_w...    updated_at,\n    artifacts,\n    thread_id\n)\nVALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);\n'
+params = ('2e1cd244-52d2-465a-b7d1-05ea53214cad', '{"action": "investigate", "subject": "Shopify revenue drop", "outcome": "identify likely causes"}', 'operations', 'created', 2, None, ...)
+
+    def execute(self, query: str, params: tuple = ()) -> None:
+        with self.lock:
+            with self.conn:
+>               self.conn.execute(query, params)
+E               sqlite3.ProgrammingError: Incorrect number of bindings supplied. The current statement uses 19, and there are 17 supplied.
+
+kernel/storage/sqllite.py:21: ProgrammingError
+__________________________________________________________________ test_dispatch_only_targets_created_tasks ___________________________________________________________________
+
+task_store = <kernel.tasks.task_store.TaskStore object at 0x7f96a7729280>
+
+    def test_dispatch_only_targets_created_tasks(task_store: TaskStore) -> None:
+        """Dispatcher should not re-dispatch tasks that are already queued."""
+        task = build_sample_task()
+        task.update_status(TaskStatus.QUEUED)
+        task.assign_worker("coo_worker")
+>       task_store.create_task(task)
+
+tests/smoke/test_kernel_smoke.py:113: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+kernel/tasks/task_store.py:46: in create_task
+    self.storage.execute(INSERT_TASK, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <kernel.storage.sqllite.SQLiteStorage object at 0x7f96a7729130>
+query = 'INSERT INTO tasks (\n    task_id,\n    action,\n    subject,\n    outcome,\n    domain,\n    created_by,\n    owner_w...    updated_at,\n    artifacts,\n    thread_id\n)\nVALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);\n'
+params = ('dfe41372-2a7b-4624-8f62-82d652b40959', '{"action": "investigate", "subject": "Shopify revenue drop", "outcome": "identify likely causes"}', 'operations', 'queued', 2, 'coo_worker', ...)
+
+    def execute(self, query: str, params: tuple = ()) -> None:
+        with self.lock:
+            with self.conn:
+>               self.conn.execute(query, params)
+E               sqlite3.ProgrammingError: Incorrect number of bindings supplied. The current statement uses 19, and there are 17 supplied.
+
+kernel/storage/sqllite.py:21: ProgrammingError
+=========================================================================== short test summary info ===========================================================================
+FAILED tests/smoke/test_api_smoke.py::test_api_task_lifecycle_sample_and_custom - NameError: name 'sample_task_id' is not defined
+FAILED tests/smoke/test_kernel_smoke.py::test_task_creation_and_persistence - sqlite3.ProgrammingError: Incorrect number of bindings supplied. The current statement uses 19, and there are 17 supplied.
+FAILED tests/smoke/test_kernel_smoke.py::test_dispatch_created_tasks_queues_and_assigns_worker - sqlite3.ProgrammingError: Incorrect number of bindings supplied. The current statement uses 19, and there are 17 supplied.
+FAILED tests/smoke/test_kernel_smoke.py::test_dispatch_only_targets_created_tasks - sqlite3.ProgrammingError: Incorrect number of bindings supplied. The current statement uses 19, and there are 17 supplied.
+================================================================== 4 failed, 7 passed, 20 warnings in 0.82s ===================================================================

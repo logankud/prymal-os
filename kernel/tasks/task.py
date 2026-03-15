@@ -92,19 +92,24 @@ class Task:
 
     # expected outputs
     expected_outputs: List[str] = field(default_factory=list)
-
+    
+    # work estimation / timing / dependency hints
+    expected_token_count: Optional[int] = None
+    due_date: Optional[datetime] = None
+    dependency_str: Optional[str] = None
+    
     # task relationships
     parent_task_id: Optional[str] = None
     dependencies: List[str] = field(default_factory=list)
-
+    
     # system metadata
     task_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-
+    
     # artifacts generated
     artifacts: List[str] = field(default_factory=list)
-
+    
     # conversation linkage
     thread_id: Optional[str] = None
 
@@ -144,6 +149,9 @@ class Task:
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "expected_outputs": self.expected_outputs,
+            "expected_token_count": self.expected_token_count,
+            "due_date": self.due_date.isoformat() if self.due_date else None,
+            "dependency_str": self.dependency_str,
             "dependencies": self.dependencies,
             "parent_task_id": self.parent_task_id,
             "artifacts": self.artifacts,
