@@ -61,8 +61,9 @@ async def slack_events(
     - url_verification: Slack challenge handshake (required during bot setup)
     - app_mention: Translate event → IngressEvent → ingress pipeline
     """
+    import json
     body_bytes = await request.body()
-    payload: Dict[str, Any] = await request.json()
+    payload: Dict[str, Any] = json.loads(body_bytes)
 
     # ── Slack URL verification challenge ──────────────────────────────
     if payload.get("type") == "url_verification":
