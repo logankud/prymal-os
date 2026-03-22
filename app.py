@@ -2,16 +2,21 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+load_dotenv()
+
 from api.routers.dispatch import router as dispatch_router
 from api.routers.health import router as health_router
 from api.routers.tasks import router as tasks_router
 from api.routers.execution import router as execution_router
+from integrations.slack.router import router as slack_router
 from kernel.config import TASK_STORE_DB
+from kernel.model import configure_lm
 from kernel.scheduler.dispatcher import TaskDispatcher
 from kernel.scheduler.router import TaskRouter
 from kernel.storage.sqllite import SQLiteStorage
@@ -20,6 +25,8 @@ from kernel.tasks.task_store import TaskStore
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    configure_lm()
+
     storage = SQLiteStorage(db_path=TASK_STORE_DB)
     task_store = TaskStore(storage)
     task_store.initialize()
@@ -51,6 +58,7 @@ app.include_router(health_router)
 app.include_router(tasks_router)
 app.include_router(dispatch_router)
 app.include_router(execution_router)
+app.include_router(slack_router)
 
 
 @app.get("/ui", response_class=HTMLResponse)
