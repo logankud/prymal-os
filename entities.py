@@ -35,7 +35,7 @@ class TaskResponse(BaseModel):
     task_id: str
     action: str
     subject: str
-    outcome: str
+    outcome: str | None
     domain: str
     status: str
     created_by: str
@@ -67,3 +67,14 @@ class TaskResponse(BaseModel):
 
 class DispatchResponse(BaseModel):
     dispatched_count: int
+
+
+class IntakeRequest(BaseModel):
+    text: str = Field(..., description="Raw user input expressing one or more work intents.")
+    source: str = Field(default="user", description="Identifier for who submitted the request.")
+    event_type: str = Field(default="user_text", description="Ingress event type.")
+
+
+class IntakeResponse(BaseModel):
+    tasks_created: int
+    tasks: list[TaskResponse]
