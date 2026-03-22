@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from api.routers.dispatch import router as dispatch_router
 from api.routers.health import router as health_router
@@ -41,10 +44,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
 app.include_router(health_router)
 app.include_router(tasks_router)
 app.include_router(dispatch_router)
 app.include_router(execution_router)
+
+
+@app.get("/ui", response_class=HTMLResponse)
+def ui(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 if __name__ == "__main__":
