@@ -1,29 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prymal OS</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpsIQ</title>
+  <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Prymal OS</h1>
-            <p class="tagline">AI Orchestration Framework</p>
-        </header>
-        <main>
-            <section class="hero">
-                <p>Turn human ideas into AI work. Orchestrate agents to scale humans in an organization.</p>
-            </section>
-            <section class="status">
-                <div class="status-card" id="status-card">
-                    <div class="status-indicator"></div>
-                    <span id="status-text">Checking system status...</span>
-                </div>
-            </section>
-        </main>
-    </div>
-    <script src="/static/js/main.js"></script>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="logo">OpsIQ</span>
+        <div class="system-status" id="system-status">
+          <span class="status-dot"></span>
+          <span class="status-label">connecting...</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <span class="nav-label">WORKSPACE</span>
+        <button class="nav-item active" data-page="ledger">
+          <span class="nav-icon">▤</span> Work Ledger
+        </button>
+        <button class="nav-item" data-page="intake">
+          <span class="nav-icon">＋</span> Intake
+        </button>
+      </nav>
+
+      <nav class="sidebar-nav domain-nav" id="domain-nav">
+        <span class="nav-label">FILTER BY DOMAIN</span>
+        <button class="nav-item nav-sub active" data-domain="all">All Work</button>
+        <button class="nav-item nav-sub" data-domain="marketing">Marketing</button>
+        <button class="nav-item nav-sub" data-domain="operations">Operations</button>
+        <button class="nav-item nav-sub" data-domain="research">Research</button>
+        <button class="nav-item nav-sub" data-domain="general">General</button>
+      </nav>
+
+      <div class="sidebar-actions" id="sidebar-actions-ledger">
+        <button class="action-btn" id="refresh-btn">↻ Refresh</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+      <!-- ── Ledger Page ── -->
+      <div id="page-ledger" class="page active">
+        <div class="main-header">
+          <div>
+            <h1 class="main-title">Work Ledger</h1>
+            <p class="main-sub">A complete, ordered record of all work in the system.</p>
+          </div>
+          <div class="summary-badges" id="summary-badges"></div>
+        </div>
+
+        <section class="content-section">
+          <div class="section-header">
+            <div>
+              <h2 class="section-heading">Tasks</h2>
+              <p class="section-desc">Click any row to inspect the full pipeline and artifacts.</p>
+            </div>
+          </div>
+          <div class="ledger" id="ledger">
+            <div class="ledger-loading">Loading work ledger...</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── Intake Page ── -->
+      <div id="page-intake" class="page">
+        <div class="main-header">
+          <div>
+            <h1 class="main-title">Intake</h1>
+            <p class="main-sub">Submit new work into the OpsIQ kernel.</p>
+          </div>
+        </div>
+
+        <section class="content-section">
+          <div class="section-header">
+            <div>
+              <h2 class="section-heading">New Task</h2>
+              <p class="section-desc">Define the objective and the system will route and execute it.</p>
+            </div>
+          </div>
+
+          <form class="intake-form" id="intake-form">
+
+            <div class="form-row">
+              <label class="form-label">Action <span class="form-hint">What should be done?</span></label>
+              <input class="form-input" id="f-action" type="text" placeholder="e.g. analyze, investigate, summarize" required />
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">Subject <span class="form-hint">What is this about?</span></label>
+              <input class="form-input" id="f-subject" type="text" placeholder="e.g. Q1 marketing spend" required />
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">Outcome <span class="form-hint">What does success look like?</span></label>
+              <input class="form-input" id="f-outcome" type="text" placeholder="e.g. identify top performing channels and recommend reallocation" required />
+            </div>
+
+            <div class="form-row form-row-half">
+              <div>
+                <label class="form-label">Domain <span class="form-hint">Which team owns this?</span></label>
+                <select class="form-input form-select" id="f-domain" required>
+                  <option value="">Select domain...</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="operations">Operations</option>
+                  <option value="research">Research</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Created by <span class="form-hint">Your name or system ID</span></label>
+                <input class="form-input" id="f-created-by" type="text" placeholder="e.g. logan" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">Expected Outputs <span class="form-hint">Comma-separated list of artifacts expected</span></label>
+              <input class="form-input" id="f-expected-outputs" type="text" placeholder="e.g. channel report, budget recommendation" />
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="submit-btn" id="submit-btn">Submit Task →</button>
+            </div>
+
+          </form>
+        </section>
+
+        <!-- Success / Error feedback -->
+        <div class="intake-result" id="intake-result" style="display:none;"></div>
+
+      </div>
+
+    </main>
+
+    <!-- Detail Drawer -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <aside class="drawer" id="drawer">
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <span class="drawer-action" id="drawer-action"></span>
+          <h2 class="drawer-subject" id="drawer-subject"></h2>
+        </div>
+        <button class="drawer-close" id="drawer-close">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <section class="drawer-section">
+          <h3 class="section-title">Pipeline</h3>
+          <div class="pipeline" id="pipeline"></div>
+        </section>
+        <section class="drawer-section">
+          <h3 class="section-title">Objective</h3>
+          <div class="detail-grid" id="detail-objective"></div>
+        </section>
+        <section class="drawer-section" id="artifacts-section">
+          <h3 class="section-title">Artifacts</h3>
+          <div class="artifacts-list" id="artifacts-list"></div>
+        </section>
+        <section class="drawer-section" id="expected-section">
+          <h3 class="section-title">Expected Outputs</h3>
+          <div class="tag-list" id="expected-outputs"></div>
+        </section>
+        <section class="drawer-section">
+          <h3 class="section-title">Meta</h3>
+          <div class="detail-grid" id="detail-meta"></div>
+        </section>
+      </div>
+    </aside>
+
+  </div>
+
+  <script src="/static/js/main.js"></script>
 </body>
 </html>
