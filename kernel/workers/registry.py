@@ -11,8 +11,13 @@ class WorkerRegistry:
     """
     Central registry for worker metadata.
 
-    The registry manages lookup and resolution behavior.
-    Worker definitions themselves live outside this module.
+    The registry manages:
+    - worker lookup by id
+    - worker lookup by supported domain
+    - task-to-worker resolution
+    - implementation resolution via WorkerSpec
+
+    Worker definitions themselves live in catalog.py.
     """
 
     def __init__(
@@ -56,6 +61,18 @@ class WorkerRegistry:
 
     def resolve_for_task(self, task: Task) -> WorkerSpec:
         return self.resolve_for_domain(task.domain)
+
+    def resolve_implementation_class(self, worker_id: str):
+        worker_spec = self.get_worker_by_id(worker_id)
+        if worker_spec is None:
+            raise ValueError(f"No worker spec found for worker_id='{worker_id}'")
+
+        if worker_spec.implementation_cls is None:
+            raise ValueError(
+                f"Worker '{worker_id}' is declared but has no implementation class."
+            )
+
+        return worker_spec.implementation_cls
 
 
 def build_worker_registry(

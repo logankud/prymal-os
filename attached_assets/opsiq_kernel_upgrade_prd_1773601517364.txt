@@ -1,0 +1,330 @@
+
+OpsIQ Kernel Incremental Upgrade — Product Requirements Document (PRD)
+Version: 1.0
+
+OBJECTIVE
+Implement an incremental upgrade to the OpsIQ kernel and API so tasks support richer metadata at creation time, dispatcher behavior is made explicit through a queueing method, and persistence/API/tests remain aligned while preserving existing functionality.
+
+CURRENT SYSTEM BASELINE
+The current system supports:
+- Task creation
+- Task persistence in SQLite
+- Routing via registry-backed router
+- Dispatching tasks from CREATED -> QUEUED
+- FastAPI endpoints:
+  - GET /health
+  - POST /tasks
+  - POST /tasks/sample
+  - GET /tasks
+  - GET /tasks/{task_id}
+  - POST /dispatch
+- Smoke tests for kernel behavior and API behavior
+
+The lifecycle must remain:
+CREATED -> QUEUED
+
+No execution engine or worker runtime is required in this implementation.
+
+SCOPE
+
+IN SCOPE
+
+1. Task Creation Metadata
+Add the following optional fields to the task model and propagate them through the entire stack:
+
+expected_token_count: int | None
+due_date: datetime | None
+dependency_str: str | None
+
+These fields must be supported in:
+- Task model
+- Storage layer
+- Sample task builder
+- API request model
+- API response model
+- Tests
+
+2. Dispatcher Refactor
+Introduce an explicit dispatcher method:
+
+add_task_to_queue(task)
+
+Dispatcher must still expose:
+
+dispatch_created_tasks()
+
+dispatch_created_tasks() must:
+- find tasks in CREATED
+- call add_task_to_queue(task) for each
+- return the number of tasks dispatched
+
+add_task_to_queue(task) must:
+- route the task
+- assign owner_worker
+- update status to QUEUED
+- persist the updated task
+
+3. Preserve API Behavior
+Existing endpoints must remain unchanged:
+
+GET /health
+POST /tasks
+POST /tasks/sample
+GET /tasks
+GET /tasks/{task_id}
+POST /dispatch
+
+4. Test Compatibility
+All smoke tests must continue passing.
+Tests must be updated to verify the new metadata fields.
+
+OUT OF SCOPE
+
+Do NOT implement:
+
+- worker execution
+- claiming lifecycle
+- task completion
+- retries
+- dependency resolution
+- queue prioritization
+- due-date-aware scheduling
+- dependency graph execution
+- background workers
+- auth
+- UI changes
+
+FUNCTIONAL REQUIREMENTS
+
+Task Model
+The task entity must support:
+
+expected_token_count
+- nullable integer
+- proxy for expected LLM/agent effort
+
+due_date
+- nullable datetime
+- optional timing metadata
+- no scheduling logic required
+
+dependency_str
+- nullable string
+- freeform dependency description
+- no structured parsing required
+
+Persistence
+
+SQLite schema must support new fields.
+
+Datatype expectations:
+
+expected_token_count -> INTEGER
+due_date -> TEXT (ISO datetime string)
+dependency_str -> TEXT
+
+Persistence requirements:
+- insert works
+- update works
+- fetch works
+- list works
+- values round-trip correctly
+
+Dispatcher
+
+Required methods:
+
+add_task_to_queue(task)
+dispatch_created_tasks()
+
+add_task_to_queue behavior:
+- accepts a single task
+- routes via router
+- assigns worker
+- updates status to QUEUED
+- persists task
+
+dispatch_created_tasks behavior:
+- fetch tasks with status CREATED
+- call add_task_to_queue(task)
+- return dispatch count
+
+Sample Task Input
+
+interfaces/inputs/sample_task.py must populate:
+
+expected_token_count
+dependency_str
+
+due_date may be None.
+
+API Request Model
+
+POST /tasks must accept:
+
+expected_token_count
+due_date
+dependency_str
+
+All fields optional.
+
+API Response Model
+
+Responses must include:
+
+expected_token_count
+due_date
+dependency_str
+
+Applies to:
+POST /tasks
+POST /tasks/sample
+GET /tasks
+GET /tasks/{task_id}
+
+TESTING REQUIREMENTS
+
+Kernel Smoke Tests
+
+Verify:
+- task creation works
+- persistence works
+- metadata fields round-trip
+- routing works
+- dispatch moves CREATED -> QUEUED
+
+API Smoke Tests
+
+Verify:
+- metadata fields accepted by API
+- metadata fields returned by API
+- metadata fields preserved when fetching tasks
+- dispatch behavior unchanged
+
+FILES EXPECTED TO CHANGE
+
+Core Domain
+kernel/tasks/task.py
+kernel/tasks/task_store.py
+
+SQL
+kernel/sql/tasks/create_table.sql
+kernel/sql/tasks/insert_task.sql
+kernel/sql/tasks/get_task.sql
+kernel/sql/tasks/list_task_by_status.sql
+kernel/sql/tasks/list_tasks.sql
+kernel/sql/tasks/update_task.sql
+
+API
+entities.py
+api/routers/tasks.py
+
+Inputs
+interfaces/inputs/sample_task.py
+
+Dispatcher
+kernel/scheduler/dispatcher.py
+
+Tests
+tests/smoke/test_kernel_smoke.py
+tests/smoke/test_api_smoke.py
+
+ACCEPTANCE CRITERIA
+
+Task Model
+- new metadata fields exist
+- fields optional
+- existing creation flow works
+
+Persistence
+- insert works
+- update works
+- fetch works
+- list works
+- metadata round-trips correctly
+
+Dispatcher
+- dispatch_created_tasks works
+- add_task_to_queue exists
+- CREATED -> QUEUED preserved
+
+API
+- POST /tasks accepts new fields
+- responses include fields
+- sample task endpoint works
+- GET endpoints return fields
+
+Tests
+- all smoke tests pass
+- new metadata validated
+
+CODE STYLE REQUIREMENTS
+
+General Style
+- simple, explicit code
+- small methods
+- avoid clever abstractions
+- preserve current project structure
+
+Inline Comments
+Use minimal comments.
+Only add comments when explaining:
+- non-obvious logic
+- constraints
+- surprising behavior
+
+Avoid comments that restate obvious code.
+
+Example:
+
+Good:
+# Store due_date as ISO text so SQLite can round-trip the value cleanly.
+due_date_value = task.due_date.isoformat() if task.due_date else None
+
+Bad:
+# Set due date value
+due_date_value = task.due_date.isoformat() if task.due_date else None
+
+Function Design
+- narrow responsibilities
+- explicit typing
+- avoid mixing storage translation and business logic
+
+Naming
+Use clear names:
+add_task_to_queue
+expected_token_count
+dependency_str
+
+Avoid vague names:
+process_task
+meta
+extra_info
+
+Test Style
+- each test verifies one behavior cluster
+- explicit assertions
+- readable payloads
+- avoid order-dependent tests
+
+SUGGESTED IMPLEMENTATION ORDER
+
+1. Update task model
+2. Update SQL schema and queries
+3. Update task store
+4. Update sample task builder
+5. Update API request/response models
+6. Update task router endpoint
+7. Refactor dispatcher
+8. Update kernel smoke tests
+9. Update API smoke tests
+10. Run full test suite
+
+DELIVERABLE
+
+The implementation is complete when:
+
+- code compiles
+- smoke tests pass
+- metadata fields persist correctly
+- dispatcher behavior remains unchanged

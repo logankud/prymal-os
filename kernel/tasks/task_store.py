@@ -7,7 +7,6 @@ from kernel.storage.sqllite import SQLiteStorage
 from kernel.tasks.task import Objective, Task, TaskDomain, TaskPriority, TaskStatus
 from kernel.utils.sql_loader import load_sql
 
-
 CREATE_TABLE = load_sql("tasks/create_table.sql")
 INSERT_TASK = load_sql("tasks/insert_task.sql")
 GET_TASK = load_sql("tasks/get_task.sql")
@@ -101,6 +100,9 @@ class TaskStore:
             created_at=datetime.fromisoformat(row["created_at"]),
             updated_at=datetime.fromisoformat(row["updated_at"]),
             expected_outputs=json.loads(row["expected_outputs"]),
+            expected_token_count=row["expected_token_count"],
+            due_date=datetime.fromisoformat(row["due_date"]) if row["due_date"] else None,
+            dependency_str=row["dependency_str"],
             dependencies=json.loads(row["dependencies"]),
             parent_task_id=row["parent_task_id"],
             artifacts=json.loads(row["artifacts"]),

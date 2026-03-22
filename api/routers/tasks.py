@@ -37,6 +37,9 @@ def create_task(
         domain=payload.domain,
         created_by=payload.created_by,
         expected_outputs=payload.expected_outputs,
+        expected_token_count=payload.expected_token_count,
+        due_date=payload.due_date,
+        dependency_str=payload.dependency_str,
     )
 
     task_store.create_task(task)
@@ -46,6 +49,7 @@ def create_task(
         raise HTTPException(status_code=500, detail="Task was not persisted.")
 
     return TaskResponse.from_task(persisted)
+
 
 @router.get("", response_model=list[TaskResponse])
 def list_tasks(

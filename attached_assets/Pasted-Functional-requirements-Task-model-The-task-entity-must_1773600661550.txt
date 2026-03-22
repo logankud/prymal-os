@@ -1,0 +1,74 @@
+Functional requirements
+Task model
+The task entity must support:
+* expected_token_count
+    * nullable integer
+    * intended as a rough proxy for expected LLM/agent effort
+* due_date
+    * nullable datetime
+    * intended as optional timing metadata only
+    * no scheduling logic required yet
+* dependency_str
+    * nullable string
+    * freeform description of dependencies at creation time
+    * no parsing or structured dependency engine required
+These fields must be optional and default to None.
+
+Persistence
+SQLite schema and all related SQL queries must support the new fields.
+Required storage behavior
+* tasks can be inserted with these fields
+* tasks can be updated with these fields
+* tasks can be fetched with these fields
+* tasks can be listed with these fields
+* values must round-trip correctly from model → DB → model
+Datatype expectations
+* expected_token_count → INTEGER
+* due_date → TEXT storing ISO datetime strings
+* dependency_str → TEXT
+
+Dispatcher
+Refactor dispatcher behavior to make queueing explicit.
+Required methods
+* add_task_to_queue(task)
+* dispatch_created_tasks()
+add_task_to_queue(task) behavior
+* accepts a single task
+* routes it via the router
+* assigns the correct worker
+* updates status to QUEUED
+* persists the updated task
+* returns the updated task or performs the mutation cleanly
+dispatch_created_tasks() behavior
+* fetches all tasks with status CREATED
+* calls add_task_to_queue(task) for each
+* returns dispatch count
+No changes to routing policy are required.
+
+Sample task input
+The reusable sample task builder must populate the new fields so they are exercised in both:
+* direct kernel tests
+* API smoke tests
+Use a realistic sample value for:
+* expected_token_count
+* dependency_str
+due_date may remain None in the sample task unless a concrete sample date is helpful.
+
+API request model
+POST /tasks must accept the new task creation fields.
+Request payload additions
+* expected_token_count
+* due_date
+* dependency_str
+All must be optional.
+
+API response model
+Task responses must include:
+* expected_token_count
+* due_date
+* dependency_str
+This applies to:
+* POST /tasks
+* POST /tasks/sample
+* GET /tasks
+* GET /tasks/{task_id}

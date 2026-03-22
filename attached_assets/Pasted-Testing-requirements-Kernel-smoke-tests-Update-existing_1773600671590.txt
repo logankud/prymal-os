@@ -1,0 +1,166 @@
+Testing requirements
+Kernel smoke tests
+Update existing smoke tests to verify:
+* task creation still works
+* task persistence still works
+* new metadata fields persist and reconstruct correctly
+* routing still works
+* dispatch still moves CREATED -> QUEUED
+Required new assertions
+Verify round-trip persistence of:
+* expected_token_count
+* due_date
+* dependency_str
+
+API smoke tests
+Update API smoke tests so:
+* custom task payload includes the new metadata fields
+* API response includes the new metadata fields
+* fetched task includes the same metadata values
+* dispatch behavior remains unchanged
+
+File-level implementation expectations
+The dev should expect to update at least these files.
+Core domain
+* kernel/tasks/task.py
+* kernel/tasks/task_store.py
+SQL
+* kernel/sql/tasks/create_table.sql
+* kernel/sql/tasks/insert_task.sql
+* kernel/sql/tasks/get_task.sql
+* kernel/sql/tasks/list_task_by_status.sql
+* kernel/sql/tasks/list_tasks.sql
+* kernel/sql/tasks/update_task.sql
+API
+* entities.py
+* api/routers/tasks.py
+* possibly app.py only if needed, but avoid unnecessary changes
+Inputs
+* interfaces/inputs/sample_task.py
+Dispatcher
+* kernel/scheduler/dispatcher.py
+Tests
+* tests/smoke/test_kernel_smoke.py
+* tests/smoke/test_api_smoke.py
+
+Acceptance criteria
+Implementation is complete when all of the following are true:
+Task model
+* new metadata fields exist on the task model
+* they are optional
+* they do not break existing task creation flows
+Persistence
+* task insert works
+* task update works
+* task fetch works
+* task list works
+* metadata round-trips cleanly
+Dispatcher
+* dispatch_created_tasks() still works
+* explicit add_task_to_queue(task) method exists
+* CREATED -> QUEUED behavior is preserved
+API
+* POST /tasks accepts new metadata fields
+* responses include those fields
+* POST /tasks/sample still works
+* GET /tasks and GET /tasks/{task_id} expose those fields
+Tests
+* all existing smoke tests pass
+* updated smoke tests validate new metadata fields
+
+Constraints
+Do not break existing behavior
+This work should be additive and refactor-oriented, not disruptive.
+Keep current route structure
+Do not rename or remove currently working endpoints.
+Preserve registry-backed routing
+Do not revert router behavior to hardcoded inline domain mapping.
+No premature scheduler complexity
+Do not add:
+* due-date sorting
+* dependency satisfaction checks
+* priority queues
+* worker claiming
+
+Code style requirements
+General style
+* keep code explicit and boring
+* prefer small, obvious methods
+* avoid clever abstractions
+* preserve current project structure unless a change is necessary for this feature
+* do not introduce new frameworks or architectural layers
+Comment style
+Use minimal inline comments.
+Requirement
+Only include inline comments when they are truly helpful for:
+* non-obvious reasoning
+* surprising behavior
+* constraints that are easy to violate
+Avoid comments for:
+* restating what the code obviously does
+* narrating simple assignments
+* redundant section headers inside small methods
+Preferred comment density
+* sparse
+* targeted
+* explanation-oriented, not narration-oriented
+
+Example comment style
+# Store due_date as ISO text in SQLite so it round-trips cleanly through the API.
+due_date_value = task.due_date.isoformat() if task.due_date else None
+Bad style to avoid:
+# Set the due date value
+due_date_value = task.due_date.isoformat() if task.due_date else None
+
+Function design
+* prefer direct, typed functions
+* keep method responsibilities narrow
+* avoid mixing storage translation logic with unrelated business logic
+Naming
+Use clear names that reflect behavior.
+Examples:
+* add_task_to_queue
+* expected_token_count
+* dependency_str
+Avoid vague names like:
+* process_task
+* meta
+* extra_info
+
+Test style
+* one test should validate one clear behavior cluster
+* keep payloads readable
+* prefer explicit assertions over indirect inference
+* do not rely on test execution order
+
+Suggested implementation order
+1. update task model
+2. update SQL schema and queries
+3. update task store
+4. update sample task input
+5. update API request/response models
+6. update task router endpoint
+7. refactor dispatcher
+8. update kernel smoke tests
+9. update API smoke tests
+10. run full test suite
+
+Deliverable expectation
+The dev should deliver:
+1. updated code across the files listed above
+2. passing smoke tests
+3. no regression in existing task creation / dispatch behavior
+4. minimal-comment implementation that stays aligned with current architecture
+
+Separate code-style snippet for handoff
+# Good: explains a non-obvious storage choice.
+due_date_value = task.due_date.isoformat() if task.due_date else None
+
+# Good: explains a lifecycle boundary.
+# Keep single-task queue admission here so dispatch_created_tasks() remains a sweep.
+def add_task_to_queue(self, task: Task) -> Task:
+    ...
+
+# Avoid: redundant narration of obvious code.
+task.status = TaskStatus.QUEUED
+If you want, I can turn this into a polished Markdown file you can hand off directly.

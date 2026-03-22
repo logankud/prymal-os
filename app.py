@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from api.routers.dispatch import router as dispatch_router
 from api.routers.health import router as health_router
 from api.routers.tasks import router as tasks_router
+from api.routers.execution import router as execution_router
 from kernel.config import TASK_STORE_DB
 from kernel.scheduler.dispatcher import TaskDispatcher
 from kernel.scheduler.router import TaskRouter
@@ -43,6 +44,7 @@ app = FastAPI(
 app.include_router(health_router)
 app.include_router(tasks_router)
 app.include_router(dispatch_router)
+app.include_router(execution_router)
 
 
 if __name__ == "__main__":

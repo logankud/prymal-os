@@ -22,15 +22,16 @@ from typing import List, Optional
 # ENUMS
 # -----------------------------
 
-
 class TaskStatus(str, Enum):
     CREATED = "created"
     QUEUED = "queued"
+    CLAIMED = "claimed"
+    RUNNING = "running"
     IN_PROGRESS = "in_progress"
     BLOCKED = "blocked"
     COMPLETED = "completed"
+    FAILED = "failed"
     CANCELLED = "cancelled"
-
 
 class TaskPriority(int, Enum):
     LOW = 1

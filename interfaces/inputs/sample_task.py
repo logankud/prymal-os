@@ -11,19 +11,10 @@ In the future this directory will contain real input adapters such as:
 """
 
 from typing import Optional
-from kernel.tasks.task import Task, Objective, TaskDomain
+from kernel.tasks.task import Objective, Task, TaskDomain
 
 
-def build_sample_task() -> Optional[Task]:
-    """
-    Construct a sample Task to simulate an external input source.
-
-    Returns
-    -------
-    Task | None
-        A Task instance that can be passed into the kernel.
-    """
-
+def build_sample_task() -> Task:
     return Task(
         objective=Objective(
             action="investigate",
@@ -36,4 +27,7 @@ def build_sample_task() -> Optional[Task]:
             "root cause summary",
             "recommended next actions",
         ],
+        expected_token_count=2500,
+        due_date=None,
+        dependency_str="Depends on access to Shopify revenue and campaign data.",
     )

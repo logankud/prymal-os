@@ -1,13 +1,18 @@
+from __future__ import annotations
+
 from kernel.tasks.task import TaskDomain
 from kernel.workers.spec import WorkerSpec
+from workers.general_worker import GeneralWorker
+from workers.marketing_worker import MarketingWorker
 
 
-COO_WORKER = WorkerSpec(
-    worker_id="coo_worker",
-    supported_domains=(TaskDomain.OPERATIONS,),
-    display_name="COO Worker",
-    description="Handles operations-oriented tasks.",
-    tags=("operations", "ops"),
+GENERAL_WORKER = WorkerSpec(
+    worker_id="general_worker",
+    supported_domains=(TaskDomain.GENERAL,),
+    display_name="General Worker",
+    description="Handles general-purpose tasks.",
+    tags=("general",),
+    implementation_cls=GeneralWorker,
 )
 
 CMO_WORKER = WorkerSpec(
@@ -16,6 +21,17 @@ CMO_WORKER = WorkerSpec(
     display_name="CMO Worker",
     description="Handles marketing-oriented tasks.",
     tags=("marketing", "growth"),
+    implementation_cls=MarketingWorker,
+)
+
+
+COO_WORKER = WorkerSpec(
+    worker_id="coo_worker",
+    supported_domains=(TaskDomain.OPERATIONS,),
+    display_name="COO Worker",
+    description="Handles operations-oriented tasks.",
+    tags=("operations", "ops"),
+    implementation_cls=GeneralWorker,
 )
 
 RESEARCH_WORKER = WorkerSpec(
@@ -24,14 +40,7 @@ RESEARCH_WORKER = WorkerSpec(
     display_name="Research Worker",
     description="Handles research-oriented tasks.",
     tags=("research",),
-)
-
-GENERAL_WORKER = WorkerSpec(
-    worker_id="general_worker",
-    supported_domains=(TaskDomain.GENERAL,),
-    display_name="General Worker",
-    description="Handles general-purpose tasks.",
-    tags=("general",),
+    implementation_cls=GeneralWorker,
 )
 
 WORKER_SPECS = (
