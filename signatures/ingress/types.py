@@ -26,11 +26,10 @@ class ParsedIntent(BaseModel):
     subject: str = Field(
         description="The specific entity, topic, or asset the action applies to."
     )
-    outcome: str | None = Field(
-        default=None,
+    outcome: str = Field(
         description=(
             "The desired result or goal of the work. "
-            "None if not clearly stated."
+            "If not explicitly stated, infer a concise, reasonable outcome from context."
         ),
     )
     domain: Literal["marketing", "operations", "research", "general"] = Field(

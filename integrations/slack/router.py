@@ -18,7 +18,7 @@ from kernel.tasks.task_store import TaskStore
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/integrations/slack", tags=["integrations", "slack"])
+router = APIRouter(prefix="/integrations/slack", tags=["integrations"])
 
 _adapter = SlackAdapter()
 
