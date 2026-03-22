@@ -25,7 +25,7 @@ def _make_extract_result(candidates: list[str]) -> SimpleNamespace:
     return SimpleNamespace(intent_candidates=candidates)
 
 
-def _make_refine_result(action: str, subject: str, outcome: str | None, domain: str) -> SimpleNamespace:
+def _make_refine_result(action: str, subject: str, outcome: str, domain: str) -> SimpleNamespace:
     return SimpleNamespace(
         intent=ParsedIntent(action=action, subject=subject, outcome=outcome, domain=domain)
     )
@@ -56,7 +56,7 @@ async def test_single_intent_returns_success(mock_lm):
     node._refine = MagicMock(return_value=_make_refine_result(
         action="analyze",
         subject="Q2 churn rate",
-        outcome=None,
+        outcome="identify key drivers of churn",
         domain="research",
     ))
 
@@ -77,7 +77,7 @@ async def test_single_intent_emits_observations(mock_lm):
     node = IngressNode()
 
     node._extract = MagicMock(return_value=_make_extract_result(["Analyze Q2 churn rate"]))
-    node._refine = MagicMock(return_value=_make_refine_result("analyze", "Q2 churn rate", None, "research"))
+    node._refine = MagicMock(return_value=_make_refine_result("analyze", "Q2 churn rate", "identify key drivers of churn", "research"))
 
     state = {"ingress_event": _make_event("Analyze our Q2 churn rate")}
     result = await node.run(state)
@@ -102,7 +102,7 @@ async def test_multiple_candidates_produces_multiple_intents(mock_lm):
         "Create a win-back campaign for lapsed enterprise accounts",
     ]))
     node._refine = MagicMock(side_effect=[
-        _make_refine_result("analyze", "Q2 churn rate", None, "research"),
+        _make_refine_result("analyze", "Q2 churn rate", "identify key drivers of churn", "research"),
         _make_refine_result("create", "win-back campaign", "re-engage lapsed enterprise accounts", "marketing"),
     ])
 
@@ -128,7 +128,7 @@ async def test_partial_refine_failure_returns_partial_success(mock_lm):
         "Create a win-back campaign",
     ]))
     node._refine = MagicMock(side_effect=[
-        _make_refine_result("analyze", "Q2 churn rate", None, "research"),
+        _make_refine_result("analyze", "Q2 churn rate", "identify key drivers of churn", "research"),
         RuntimeError("LLM call failed"),
     ])
 
