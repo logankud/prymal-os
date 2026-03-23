@@ -22,7 +22,7 @@ from typing import List, Optional
 
 from pydantic import Field
 
-from kernel.artifacts.base import ArtifactKind, BaseArtifact, BasePayload
+from artifacts.base import ArtifactKind, BaseArtifact, BasePayload
 from kernel.tasks.task import TaskDomain
 
 

@@ -25,7 +25,7 @@ from typing import Any, Dict, Optional
 
 from pydantic import Field
 
-from kernel.artifacts.base import ArtifactKind, BaseArtifact, BasePayload
+from artifacts.base import ArtifactKind, BaseArtifact, BasePayload
 
 
 # -----------------------------

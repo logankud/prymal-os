@@ -17,6 +17,7 @@ from api.routers.intake import router as intake_router
 from api.routers.tasks import router as tasks_router
 from api.routers.execution import router as execution_router
 from integrations.slack.router import router as slack_router
+from integrations.slack.socket_client import start_socket_client
 from kernel.config import TASK_STORE_DB
 from kernel.intake.intake_service import IntakeService
 from kernel.model import configure_lm
@@ -50,6 +51,8 @@ async def lifespan(app: FastAPI):
         run_execution_loop(task_store=task_store, executor=executor)
     )
 
+    start_socket_client()
+
     try:
         yield
     finally:
@@ -68,10 +71,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 app.include_router(health_router)
+app.include_router(intake_router)
 app.include_router(tasks_router)
 app.include_router(dispatch_router)
 app.include_router(execution_router)
-app.include_router(intake_router)
 app.include_router(slack_router)
 
 

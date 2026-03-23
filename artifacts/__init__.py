@@ -1,36 +1,36 @@
 # kernel/artifacts/__init__.py
 
-from kernel.artifacts.base import (
+from artifacts.base import (
     ArtifactKind,
     BaseArtifact,
     BasePayload,
 )
-from kernel.artifacts.analysis import (
+from artifacts.analysis import (
     AnalysisArtifact,
     AnalysisPayload,
     EvidenceItem,
     Hypothesis,
     SuggestedTask,
 )
-from kernel.artifacts.recommendation import (
+from artifacts.recommendation import (
     RecommendationArtifact,
     RecommendationItem,
     RecommendationPayload,
 )
-from kernel.artifacts.content import (
+from artifacts.content import (
     ContentArtifact,
     ContentPayload,
 )
-from kernel.artifacts.report import (
+from artifacts.report import (
     ReportArtifact,
     ReportPayload,
     ReportSection,
 )
-from kernel.artifacts.action import (
+from artifacts.action import (
     ActionArtifact,
     ActionPayload,
 )
-from kernel.artifacts.signal import (
+from artifacts.signal import (
     SignalArtifact,
     SignalPayload,
 )

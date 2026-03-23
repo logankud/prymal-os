@@ -4,6 +4,8 @@ from kernel.tasks.task import TaskDomain
 from kernel.workers.spec import WorkerSpec
 from workers.general_worker import GeneralWorker
 from workers.marketing_worker import MarketingWorker
+from workers.operations_worker import OperationsWorker
+from workers.research_worker import ResearchWorker
 
 
 GENERAL_WORKER = WorkerSpec(
@@ -24,14 +26,13 @@ CMO_WORKER = WorkerSpec(
     implementation_cls=MarketingWorker,
 )
 
-
 COO_WORKER = WorkerSpec(
     worker_id="coo_worker",
     supported_domains=(TaskDomain.OPERATIONS,),
     display_name="COO Worker",
     description="Handles operations-oriented tasks.",
     tags=("operations", "ops"),
-    implementation_cls=GeneralWorker,
+    implementation_cls=OperationsWorker,
 )
 
 RESEARCH_WORKER = WorkerSpec(
@@ -40,7 +41,7 @@ RESEARCH_WORKER = WorkerSpec(
     display_name="Research Worker",
     description="Handles research-oriented tasks.",
     tags=("research",),
-    implementation_cls=GeneralWorker,
+    implementation_cls=ResearchWorker,
 )
 
 WORKER_SPECS = (

@@ -19,8 +19,8 @@ from typing import List, Optional
 
 from pydantic import Field
 
-from kernel.artifacts.analysis import SuggestedTask
-from kernel.artifacts.base import ArtifactKind, BaseArtifact, BasePayload
+from artifacts.analysis import SuggestedTask
+from artifacts.base import ArtifactKind, BaseArtifact, BasePayload
 
 
 # -----------------------------
