@@ -17,5 +17,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     artifacts TEXT NOT NULL,
-    thread_id TEXT
+    thread_id TEXT,
+    work_request_id TEXT,
+    intent_index INTEGER
 );

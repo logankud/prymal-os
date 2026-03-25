@@ -19,6 +19,8 @@ async def intake(
             text=request.text,
             source=request.source,
             event_type=request.event_type,
+            thread_id=request.thread_id,
+            user_id=request.user_id,
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
