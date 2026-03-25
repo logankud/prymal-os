@@ -1,7 +1,13 @@
-.PHONY: server tunnel server-local test lint
+.PHONY: server kill-server tunnel server-local test lint logs
 
 server:
-	uv run python -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+	PYTHONUNBUFFERED=1 uv run python -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload --log-level debug 2>&1 | tee /tmp/opsiq.log
+
+kill-server:
+	@lsof -ti :8000 | xargs kill -9 2>/dev/null && echo "Killed server on :8000" || echo "No server running on :8000"
+
+logs:
+	tail -f /tmp/opsiq.log
 
 tunnel:
 	ngrok http 8000

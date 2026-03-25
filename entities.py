@@ -73,6 +73,9 @@ class IntakeRequest(BaseModel):
     text: str = Field(..., description="Raw user input expressing one or more work intents.")
     source: str = Field(default="user", description="Identifier for who submitted the request.")
     event_type: str = Field(default="user_text", description="Ingress event type.")
+    thread_id: str | None = Field(default=None, description="Originating thread ID for delivery routing (e.g. slack:C123:1234567890.123).")
+    user_id: str | None = Field(default=None, description="User identifier from the source platform.")
+    channel_id: str | None = Field(default=None, description="Channel identifier from the source platform.")
 
 
 class IntakeResponse(BaseModel):

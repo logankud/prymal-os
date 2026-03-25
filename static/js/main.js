@@ -264,7 +264,14 @@ function openDrawer(task) {
 
   const artifactsList = document.getElementById('artifacts-list');
   if (task.artifacts?.length) {
-    artifactsList.innerHTML = task.artifacts.map(a => `<div class="artifact-item">${a}</div>`).join('');
+    artifactsList.innerHTML = task.artifacts.map(a => {
+      try {
+        const art = JSON.parse(a);
+        return renderArtifact(art);
+      } catch {
+        return `<div class="artifact-item">${a}</div>`;
+      }
+    }).join('');
   } else {
     artifactsList.innerHTML = '<div class="artifact-empty">No artifacts yet.</div>';
   }
@@ -289,6 +296,56 @@ function openDrawer(task) {
 
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawer-overlay').classList.add('open');
+}
+
+function renderArtifact(art) {
+  const kind = art.kind || 'report';
+  const payload = art.payload || {};
+  const worker = art.worker_id || '';
+
+  let html = `<div class="artifact-card">`;
+  html += `<div class="artifact-kind-badge artifact-kind-${kind}">${kind}</div>`;
+  html += `<div class="artifact-worker">by ${worker}</div>`;
+
+  if (kind === 'report') {
+    const title = payload.title || '';
+    const summary = payload.executive_summary || '';
+    const sections = payload.sections || [];
+
+    if (title) html += `<div class="artifact-title">${title}</div>`;
+    if (summary) html += `<div class="artifact-summary">${summary}</div>`;
+    sections.forEach(s => {
+      html += `<div class="artifact-section">`;
+      if (s.title) html += `<div class="artifact-section-title">${s.title}</div>`;
+      if (s.body) html += `<div class="artifact-body">${s.body.replace(/\n/g, '<br>')}</div>`;
+      html += `</div>`;
+    });
+
+  } else if (kind === 'analysis') {
+    const observation = payload.observation || '';
+    const evidence = payload.evidence || [];
+    const hypotheses = payload.hypotheses || [];
+
+    if (observation) html += `<div class="artifact-summary">${observation}</div>`;
+    evidence.forEach(e => {
+      html += `<div class="artifact-section">`;
+      html += `<div class="artifact-section-title">${e.source || 'Finding'}</div>`;
+      html += `<div class="artifact-body">${(e.finding || '').replace(/\n/g, '<br>')}</div>`;
+      html += `</div>`;
+    });
+    if (hypotheses.length) {
+      html += `<div class="artifact-section">`;
+      html += `<div class="artifact-section-title">Hypotheses</div>`;
+      hypotheses.forEach(h => {
+        const conf = h.confidence != null ? ` <span class="artifact-confidence">${Math.round(h.confidence * 100)}%</span>` : '';
+        html += `<div class="artifact-hypothesis">${h.claim}${conf}</div>`;
+      });
+      html += `</div>`;
+    }
+  }
+
+  html += `</div>`;
+  return html;
 }
 
 function closeDrawer() {

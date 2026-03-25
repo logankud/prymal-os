@@ -1,4 +1,4 @@
 lm:
   fast: openai/gpt-4o-mini
-  best: openai/gpt-4o
+  best: openai/gpt-4o-mini
   cheap: openai/gpt-4o-mini

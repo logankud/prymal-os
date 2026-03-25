@@ -13,6 +13,7 @@ GET_TASK = load_sql("tasks/get_task.sql")
 UPDATE_TASK = load_sql("tasks/update_task.sql")
 LIST_TASKS = load_sql("tasks/list_tasks.sql")
 LIST_TASK_BY_STATUS = load_sql("tasks/list_task_by_status.sql")
+LIST_TASKS_BY_WORK_REQUEST = load_sql("tasks/list_tasks_by_work_request.sql")
 
 
 class TaskStore:
@@ -43,6 +44,8 @@ class TaskStore:
             task.updated_at.isoformat(),
             json.dumps(task.artifacts),
             task.thread_id,
+            task.work_request_id,
+            task.intent_index,
         )
         self.storage.execute(INSERT_TASK, params)
 
@@ -72,12 +75,18 @@ class TaskStore:
             task.updated_at.isoformat(),
             json.dumps(task.artifacts),
             task.thread_id,
+            task.work_request_id,
+            task.intent_index,
             task.task_id,
         )
         self.storage.execute(UPDATE_TASK, params)
 
     def list_tasks(self) -> list[Task]:
         rows = self.storage.fetch_all(LIST_TASKS)
+        return [self._row_to_task(row) for row in rows]
+
+    def list_tasks_by_work_request(self, work_request_id: str) -> list[Task]:
+        rows = self.storage.fetch_all(LIST_TASKS_BY_WORK_REQUEST, (work_request_id,))
         return [self._row_to_task(row) for row in rows]
 
     def list_tasks_by_status(self, status: TaskStatus) -> list[Task]:
@@ -107,4 +116,6 @@ class TaskStore:
             parent_task_id=row["parent_task_id"],
             artifacts=json.loads(row["artifacts"]),
             thread_id=row["thread_id"],
+            work_request_id=row.get("work_request_id"),
+            intent_index=row.get("intent_index"),
         )

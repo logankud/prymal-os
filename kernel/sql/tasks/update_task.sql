@@ -17,5 +17,7 @@ SET
     created_at = ?,
     updated_at = ?,
     artifacts = ?,
-    thread_id = ?
+    thread_id = ?,
+    work_request_id = ?,
+    intent_index = ?
 WHERE task_id = ?;

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -11,12 +13,17 @@ from fastapi.templating import Jinja2Templates
 
 load_dotenv()
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s — %(message)s",
+)
+
 from api.routers.dispatch import router as dispatch_router
 from api.routers.health import router as health_router
 from api.routers.intake import router as intake_router
 from api.routers.tasks import router as tasks_router
 from api.routers.execution import router as execution_router
-from integrations.slack.router import router as slack_router
+from integrations.slack.delivery import make_synthesis_delivery_callback
 from integrations.slack.socket_client import start_socket_client
 from kernel.config import TASK_STORE_DB
 from kernel.intake.intake_service import IntakeService
@@ -27,6 +34,8 @@ from kernel.scheduler.dispatcher import TaskDispatcher
 from kernel.scheduler.router import TaskRouter
 from kernel.storage.sqllite import SQLiteStorage
 from kernel.tasks.task_store import TaskStore
+from kernel.work_request.work_request_store import WorkRequestStore
+from nodes.synthesis.node import SynthesisNode
 
 
 @asynccontextmanager
@@ -36,19 +45,37 @@ async def lifespan(app: FastAPI):
     storage = SQLiteStorage(db_path=TASK_STORE_DB)
     task_store = TaskStore(storage)
     task_store.initialize()
+    work_request_store = WorkRequestStore(storage)
+    work_request_store.initialize()
 
     router = TaskRouter()
     dispatcher = TaskDispatcher(task_store=task_store, router=router)
     executor = TaskExecutor(task_store=task_store)
-    intake_service = IntakeService(task_store=task_store, dispatcher=dispatcher)
+    intake_service = IntakeService(
+        task_store=task_store,
+        dispatcher=dispatcher,
+        work_request_store=work_request_store,
+    )
+
+    synthesis_node = SynthesisNode()
+    synthesis_delivery = make_synthesis_delivery_callback(
+        bot_token=os.environ.get("SLACK_BOT_TOKEN", "")
+    )
 
     app.state.storage = storage
     app.state.task_store = task_store
+    app.state.work_request_store = work_request_store
     app.state.dispatcher = dispatcher
     app.state.intake_service = intake_service
 
     execution_task = asyncio.create_task(
-        run_execution_loop(task_store=task_store, executor=executor)
+        run_execution_loop(
+            task_store=task_store,
+            executor=executor,
+            work_request_store=work_request_store,
+            synthesis_node=synthesis_node,
+            delivery_callback=synthesis_delivery,
+        )
     )
 
     start_socket_client()
@@ -75,7 +102,6 @@ app.include_router(intake_router)
 app.include_router(tasks_router)
 app.include_router(dispatch_router)
 app.include_router(execution_router)
-app.include_router(slack_router)
 
 
 @app.get("/ui", response_class=HTMLResponse)

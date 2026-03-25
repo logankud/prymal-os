@@ -114,6 +114,10 @@ class Task:
     # conversation linkage
     thread_id: Optional[str] = None
 
+    # work request linkage
+    work_request_id: Optional[str] = None
+    intent_index: Optional[int] = None
+
     # -----------------------------
     # TASK METHODS
     # -----------------------------
@@ -157,4 +161,6 @@ class Task:
             "parent_task_id": self.parent_task_id,
             "artifacts": self.artifacts,
             "thread_id": self.thread_id,
+            "work_request_id": self.work_request_id,
+            "intent_index": self.intent_index,
         }
