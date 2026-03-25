@@ -13,6 +13,7 @@ GET_WORK_REQUEST       = load_sql("work_requests/get_work_request.sql")
 UPDATE_WORK_REQUEST    = load_sql("work_requests/update_work_request.sql")
 GET_BY_THREAD_ID       = load_sql("work_requests/get_by_thread_id.sql")
 LIST_BY_STATUS         = load_sql("work_requests/list_by_status.sql")
+LIST_ALL               = load_sql("work_requests/list_all.sql")
 
 
 class WorkRequestStore:
@@ -59,6 +60,10 @@ class WorkRequestStore:
 
     def list_by_status(self, status: WorkRequestStatus) -> list[WorkRequest]:
         rows = self.storage.fetch_all(LIST_BY_STATUS, (status.value,))
+        return [self._row_to_wr(r) for r in rows]
+
+    def list_all(self) -> list[WorkRequest]:
+        rows = self.storage.fetch_all(LIST_ALL)
         return [self._row_to_wr(r) for r in rows]
 
     def _row_to_wr(self, row: dict) -> WorkRequest:

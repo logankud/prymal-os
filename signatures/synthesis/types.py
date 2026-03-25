@@ -51,6 +51,10 @@ class TaskResult(BaseModel):
         default_factory=list,
         description="Things the worker could not determine. Critical for gating synthesis confidence.",
     )
+    suggested_tasks: List[str] = Field(
+        default_factory=list,
+        description="Follow-on tasks proposed by the worker. Plain-language descriptions.",
+    )
 
 
 class SynthesisSection(BaseModel):
@@ -104,5 +108,13 @@ class SynthesisResult(BaseModel):
         description=(
             "Questions that could not be answered due to missing data or worker gaps. "
             "These are surfaced to the user so they know what remains unresolved."
+        ),
+    )
+    next_steps: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Concrete follow-on actions recommended based on the findings. "
+            "Distilled from worker suggested_tasks and synthesis reasoning. "
+            "Plain language, actionable, specific to this request."
         ),
     )

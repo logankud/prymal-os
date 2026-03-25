@@ -29,27 +29,19 @@ from signatures.synthesis.types import SynthesisResult
 logger = logging.getLogger(__name__)
 
 
-def _extract_task_result(task: Task) -> TaskResult | None:
+def _parse_artifact(artifact: dict) -> tuple[str, str, List[str], List[str], float | None]:
     """
-    Build a TaskResult from a completed Task's artifact payload.
-
-    Supports both ReportArtifact (has executive_summary + sections)
-    and AnalysisArtifact (has observation + hypotheses).
-    Returns None if the task has no usable artifacts.
+    Extract (finding, detail, gaps, suggested_tasks, confidence) from a raw artifact dict.
     """
-    if not task.artifacts:
-        return None
-
-    try:
-        artifact = json.loads(task.artifacts[0])
-    except (json.JSONDecodeError, IndexError):
-        logger.warning("Task %s: could not parse artifact JSON", task.task_id)
-        return None
-
     payload = artifact.get("payload", {})
     kind = artifact.get("kind", "")
 
-    # Extract primary finding and detail based on artifact kind
+    suggested_tasks: List[str] = [
+        f"{t.get('action', '')} {t.get('subject', '')}"
+        for t in payload.get("suggested_tasks", [])
+        if t.get("action")
+    ]
+
     if kind == "report":
         finding = payload.get("executive_summary", "")
         sections = payload.get("sections", [])
@@ -68,10 +60,49 @@ def _extract_task_result(task: Task) -> TaskResult | None:
         gaps = payload.get("gaps", [])
 
     else:
-        # Fallback: treat entire payload as detail
         finding = str(payload)[:200]
         detail = str(payload)
         gaps = []
+
+    return finding, detail, gaps, suggested_tasks, artifact.get("confidence")
+
+
+def _extract_task_result(task: Task) -> TaskResult | None:
+    """
+    Build a TaskResult from a completed Task's artifacts.
+
+    Combines all artifacts on the task — finding from the first,
+    detail/gaps/suggested_tasks merged across all.
+    Returns None if the task has no usable artifacts.
+    """
+    if not task.artifacts:
+        return None
+
+    all_findings: List[str] = []
+    all_details: List[str] = []
+    all_gaps: List[str] = []
+    all_suggested: List[str] = []
+    confidence: float | None = None
+
+    for raw in task.artifacts:
+        try:
+            artifact = json.loads(raw)
+        except json.JSONDecodeError:
+            logger.warning("Task %s: skipping unparseable artifact", task.task_id)
+            continue
+
+        finding, detail, gaps, suggested, conf = _parse_artifact(artifact)
+        if finding:
+            all_findings.append(finding)
+        if detail:
+            all_details.append(detail)
+        all_gaps.extend(gaps)
+        all_suggested.extend(suggested)
+        if conf is not None and confidence is None:
+            confidence = conf  # use first artifact's confidence
+
+    if not all_findings and not all_details:
+        return None
 
     return TaskResult(
         task_id=task.task_id,
@@ -79,10 +110,11 @@ def _extract_task_result(task: Task) -> TaskResult | None:
         subject=task.objective.subject,
         outcome=task.objective.outcome,
         domain=task.domain.value,
-        finding=finding,
-        detail=detail,
-        confidence=artifact.get("confidence"),
-        gaps=gaps,
+        finding=" | ".join(all_findings),
+        detail="\n\n---\n\n".join(all_details),
+        confidence=confidence,
+        gaps=all_gaps,
+        suggested_tasks=all_suggested,
     )
 
 

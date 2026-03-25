@@ -23,6 +23,7 @@ from api.routers.health import router as health_router
 from api.routers.intake import router as intake_router
 from api.routers.tasks import router as tasks_router
 from api.routers.execution import router as execution_router
+from api.routers.work_requests import router as work_requests_router
 from integrations.slack.delivery import make_synthesis_delivery_callback
 from integrations.slack.socket_client import start_socket_client
 from kernel.config import TASK_STORE_DB
@@ -102,6 +103,7 @@ app.include_router(intake_router)
 app.include_router(tasks_router)
 app.include_router(dispatch_router)
 app.include_router(execution_router)
+app.include_router(work_requests_router)
 
 
 @app.get("/ui", response_class=HTMLResponse)

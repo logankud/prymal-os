@@ -42,6 +42,10 @@ def _format_synthesis(work_request: WorkRequest, synthesis: SynthesisResult) -> 
             body = body[:_MAX_SECTION_CHARS] + "…"
         parts.append(f"*{section.title}*\n{body}")
 
+    if synthesis.next_steps:
+        steps = "\n".join(f"• {s}" for s in synthesis.next_steps)
+        parts.append(f"*Recommended next steps*\n{steps}")
+
     if synthesis.open_questions:
         questions = "\n".join(f"• {q}" for q in synthesis.open_questions)
         parts.append(f"*Open questions*\n{questions}")
